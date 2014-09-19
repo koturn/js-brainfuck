@@ -1,6 +1,12 @@
-var brainfuck = {
-  OPCODE: {NEXT: 0x01, ADD: 0x02, OUTPUT: 0x04, INPUT: 0x08, LOOP_S: 0x10, LOOP_E: 0x11},
-  runOrig: function(source, jqTextHandler) {
+'use strict';
+
+
+var Brainfuck = function() {};
+
+(function () {
+  var OPCODE = {NEXT: 0x01, ADD: 0x02, OUTPUT: 0x04, INPUT: 0x08, LOOP_S: 0x10, LOOP_E: 0x11};
+
+  Brainfuck.prototype.runOrig = function(source, jqTextHandler) {
     var length = source.length;
     var memory = new Array(65535);
     for (var i = 0; i < memory.length; i++) {
@@ -65,8 +71,9 @@ var brainfuck = {
       pc += 1;
     }
     jqTextHandler.val(jqTextHandler.val() + output);
-  },
-  execute: function(program, jumpTable, jqTextHandler) {
+  };
+
+  Brainfuck.prototype.execute = function(program, jumpTable, jqTextHandler) {
     var len = program.length;
     var memory = new Array(65535);
     for (var i = 0; i < memory.length; i++) {
@@ -77,15 +84,15 @@ var brainfuck = {
     var pc = 0;
     while (pc < len) {
       switch (program[pc]) {
-        case this.OPCODE.NEXT:
+        case OPCODE.NEXT:
           pc++;
           dc += program[pc];
           break;
-        case this.OPCODE.ADD:
+        case OPCODE.ADD:
           pc++;
           memory[dc] += program[pc];
           break;
-        case this.OPCODE.OUTPUT:
+        case OPCODE.OUTPUT:
           var c = String.fromCharCode(memory[dc]);
           output += c;
           if (c === "\n") {
@@ -93,30 +100,30 @@ var brainfuck = {
             output = '';
           }
           break;
-        case this.OPCODE.INPUT:
+        case OPCODE.INPUT:
           // TODO
           break;
-        case this.OPCODE.LOOP_S:
+        case OPCODE.LOOP_S:
           if (memory[dc] == 0) {
             pc = jumpTable[pc];
           }
           break;
-        case this.OPCODE.LOOP_E:
+        case OPCODE.LOOP_E:
           pc = jumpTable[pc] - 1;
           break;
       }
       pc++;
     }
     jqTextHandler.val(jqTextHandler.val() + output);
-  },
-  compile: function(source) {
+  };
+
+  Brainfuck.prototype.compile = function(source) {
     var program = [];
     var jumpTable = [];
     var stack = [];
     var stackIdx = 0;
     var pc = 0;
     var len = source.length;
-
     while (pc < len) {
       var c = source[pc];
       switch (c) {
@@ -129,28 +136,28 @@ var brainfuck = {
             cnt++;
             pc++;
           }
-          program[program.length] = (c === '>' || c === '<' ? this.OPCODE.NEXT : this.OPCODE.ADD);
+          program[program.length] = (c === '>' || c === '<' ? OPCODE.NEXT : OPCODE.ADD);
           program[program.length] = (c === '>' || c === '+' ? cnt : -cnt);
           break;
         case '.':
-          program[program.length] = this.OPCODE.OUTPUT;
+          program[program.length] = OPCODE.OUTPUT;
           pc++;
           break;
         case ',':
-          program[program.length] = this.OPCODE.INPUT;
+          program[program.length] = OPCODE.INPUT;
           pc++;
           break;
         case '[':
           stack[stackIdx] = program.length;
           stackIdx++;
-          program[program.length] = this.OPCODE.LOOP_S;
+          program[program.length] = OPCODE.LOOP_S;
           pc++;
           break;
         case ']':
           stackIdx--;
           jumpTable[stack[stackIdx]] = program.length;
           jumpTable[program.length] = stack[stackIdx];
-          program[program.length] = this.OPCODE.LOOP_E;
+          program[program.length] = OPCODE.LOOP_E;
           pc++;
           break;
         default:
@@ -158,16 +165,10 @@ var brainfuck = {
       }
     }
     return {program: program, jumpTable: jumpTable};
-  },
-  translate: function(source, indentStr) {
+  };
+
+  Brainfuck.prototype.translate = function(source, indentStr) {
     indentStr = indentStr || '  ';
-    function makeIndent(indentStr, n) {
-      var nIndentStr = ''
-      for (var i = 0; i < n; i++) {
-        nIndentStr += indentStr
-      }
-      return nIndentStr;
-    };
     var output = "#include <stdio.h>\n"
         + "#include <stdlib.h>\n\n"
         + "#define MEMORY_SIZE 65536\n\n"
@@ -222,5 +223,13 @@ var brainfuck = {
     }
     output += "\n" + indentStr + "return EXIT_SUCCESS;\n}\n";
     return output;
-  }
-};
+  };
+
+  function makeIndent(indentStr, n) {
+    var nIndentStr = ''
+    for (var i = 0; i < n; i++) {
+      nIndentStr += indentStr
+    }
+    return nIndentStr;
+  };
+})();

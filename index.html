@@ -58,6 +58,7 @@
 <script src="brainfuck.js"></script>
 <script>
 $(function() {
+  var brainfuck = new Brainfuck();
   // Initilize sample code
   $('#source').val('+++++++++[>++++++++>+++++++++++>+++++<<<-]>.>++.+++++++..+++.>-.------------.<++++++++.--------.+++.------.--------.>+.');
   $('#run-orig').click(function() {
